@@ -1421,7 +1421,8 @@ const std::vector<std::string>& PhysicalPrinter::printer_options()
             "printhost_authorization_type",
             // HTTP digest authentization (RFC 2617)
             "printhost_user",
-            "printhost_password"
+            "printhost_password",
+            "printhost_ignore_check"
         };
     }
     return s_opts;
