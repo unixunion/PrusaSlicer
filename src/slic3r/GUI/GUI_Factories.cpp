@@ -17,9 +17,11 @@
 #include <boost/algorithm/string.hpp>
 #include "slic3r/Utils/FixModelByWin10.hpp"
 
-namespace Slic3r
-{
-namespace GUI
+#if defined(__WXGTK20__) || defined(__WXGTK3__)
+    #include <gtk/gtk.h>
+#endif
+
+namespace Slic3r::GUI
 {
 
 static PrinterTechnology printer_technology()
@@ -579,7 +581,19 @@ wxMenuItem* MenuFactory::append_menu_item_settings(wxMenu* menu_)
     menu_item->SetBitmap(create_menu_bitmap("cog"));
     menu_item->SetSubMenu(create_settings_popupmenu(menu, is_object_settings, item));
 
-    return menu->Append(menu_item);
+    menu_item = menu->Append(menu_item);
+
+    // A workaround for a missing icon inside wxMenuItem on GTK2 and GTK3 for skins that haven't enabled showing an icon for gtk_image_menu_item.
+#if defined(__WXGTK20__) || defined(__WXGTK3__)
+    if (menu_item->GetBitmap().IsOk()) {
+        assert(menu_item->GetKind() == wxItemKind::wxITEM_NORMAL);
+        wxGCC_WARNING_SUPPRESS(deprecated-declarations)
+        gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM(menu_item->GetMenuItem()), TRUE);
+        wxGCC_WARNING_RESTORE()
+    }
+#endif
+
+    return menu_item;
 }
 
 wxMenuItem* MenuFactory::append_menu_item_change_type(wxMenu* menu)
@@ -1161,5 +1175,4 @@ void MenuFactory::sys_color_changed(wxMenuBar* menubar)
 }
 
 
-} //namespace GUI
-} //namespace Slic3r 
+} //namespace Slic3r::GUI

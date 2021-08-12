@@ -17,6 +17,10 @@
 #include "../Utils/MacDarkMode.hpp"
 #include "BitmapComboBox.hpp"
 
+#if defined(__WXGTK20__) || defined(__WXGTK3__)
+    #include <gtk/gtk.h>
+#endif
+
 #ifndef __linux__
 // msw_menuitem_bitmaps is used for MSW and OSX
 static std::map<int, std::string> msw_menuitem_bitmaps;
@@ -75,6 +79,16 @@ wxMenuItem* append_menu_item(wxMenu* menu, int id, const wxString& string, const
     else
         menu->Insert(insert_pos, item);
 
+    // A workaround for a missing icon inside wxMenuItem on GTK2 and GTK3 for skins that haven't enabled showing an icon for gtk_image_menu_item.
+#if defined(__WXGTK20__) || defined(__WXGTK3__)
+    if (item->GetBitmap().IsOk()) {
+        assert(item->GetKind() == wxItemKind::wxITEM_NORMAL);
+        wxGCC_WARNING_SUPPRESS(deprecated-declarations)
+        gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM(item->GetMenuItem()), TRUE);
+        wxGCC_WARNING_RESTORE()
+    }
+#endif
+
 #ifdef __WXMSW__
     if (event_handler != nullptr && event_handler != menu)
         event_handler->Bind(wxEVT_MENU, cb, id);
@@ -124,6 +138,16 @@ wxMenuItem* append_submenu(wxMenu* menu, wxMenu* sub_menu, int id, const wxStrin
 
     item->SetSubMenu(sub_menu);
     menu->Append(item);
+
+    // A workaround for a missing icon inside wxMenuItem on GTK2 and GTK3 for skins that haven't enabled showing an icon for gtk_image_menu_item.
+#if defined(__WXGTK20__) || defined(__WXGTK3__)
+    if (item->GetBitmap().IsOk()) {
+        assert(item->GetKind() == wxItemKind::wxITEM_NORMAL);
+        wxGCC_WARNING_SUPPRESS(deprecated-declarations)
+        gtk_image_menu_item_set_always_show_image(GTK_IMAGE_MENU_ITEM(item->GetMenuItem()), TRUE);
+        wxGCC_WARNING_RESTORE()
+    }
+#endif
 
     if (parent) {
         parent->Bind(wxEVT_UPDATE_UI, [cb_condition, item, parent](wxUpdateUIEvent& evt) {
