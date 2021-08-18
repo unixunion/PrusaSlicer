@@ -117,7 +117,7 @@ bool CommonGizmosDataPool::check_dependencies(CommonGizmosDataID required) const
 void SelectionInfo::on_update()
 {
     const Selection& selection = get_pool()->get_canvas()->get_selection();
-    if (selection.is_single_full_instance()) {
+    if (selection.is_from_single_object()) {
         m_model_object = selection.get_model()->objects[selection.get_object_idx()];
         m_z_shift = selection.get_volume(*selection.get_volume_idxs().begin())->get_sla_shift_z();
     }
@@ -133,7 +133,8 @@ void SelectionInfo::on_release()
 int SelectionInfo::get_active_instance() const
 {
     const Selection& selection = get_pool()->get_canvas()->get_selection();
-    return selection.get_instance_idx();
+    int inst = selection.get_instance_idx();
+    return inst != -1 ? inst : 0;
 }
 
 

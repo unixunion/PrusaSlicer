@@ -42,9 +42,8 @@ std::string GLGizmoFlatten::on_get_name() const
 
 bool GLGizmoFlatten::on_is_activable() const
 {
-    // This is assumed in GLCanvas3D::do_rotate, do not change this
-    // without updating that function too.
-    return m_parent.get_selection().is_single_full_instance();
+
+    return m_parent.get_selection().is_single_full_instance() || m_parent.get_selection().is_single_full_object();
 }
 
 void GLGizmoFlatten::on_start_dragging()
@@ -58,31 +57,31 @@ void GLGizmoFlatten::on_start_dragging()
 
 void GLGizmoFlatten::on_render()
 {
-    const Selection& selection = m_parent.get_selection();
+    const ModelObject* mo = m_c->selection_info()->model_object();
 
     glsafe(::glClear(GL_DEPTH_BUFFER_BIT));
 
     glsafe(::glEnable(GL_DEPTH_TEST));
     glsafe(::glEnable(GL_BLEND));
 
-    if (selection.is_single_full_instance()) {
-        const Transform3d& m = selection.get_volume(*selection.get_volume_idxs().begin())->get_instance_transformation().get_matrix();
-        glsafe(::glPushMatrix());
-        glsafe(::glTranslatef(0.f, 0.f, selection.get_volume(*selection.get_volume_idxs().begin())->get_sla_shift_z()));
-        glsafe(::glMultMatrixd(m.data()));
-        if (this->is_plane_update_necessary())
-            update_planes();
-        for (int i = 0; i < (int)m_planes.size(); ++i) {
-            if (i == m_hover_id)
-                glsafe(::glColor4f(0.9f, 0.9f, 0.9f, 0.75f));
-            else
-                glsafe(::glColor4f(0.9f, 0.9f, 0.9f, 0.5f));
 
-            if (m_planes[i].vbo.has_VBOs())
-                m_planes[i].vbo.render();
-        }
-        glsafe(::glPopMatrix());
+    const Transform3d& m = mo->instances[m_c->selection_info()->get_active_instance()]->get_transformation().get_matrix();
+    glsafe(::glPushMatrix());
+    glsafe(::glTranslatef(0.f, 0.f, m_c->selection_info()->get_sla_shift()));
+    glsafe(::glMultMatrixd(m.data()));
+    if (this->is_plane_update_necessary())
+        update_planes();
+    for (int i = 0; i < (int)m_planes.size(); ++i) {
+        if (i == m_hover_id)
+            glsafe(::glColor4f(0.9f, 0.9f, 0.9f, 0.75f));
+        else
+            glsafe(::glColor4f(0.9f, 0.9f, 0.9f, 0.5f));
+
+        if (m_planes[i].vbo.has_VBOs())
+            m_planes[i].vbo.render();
     }
+    glsafe(::glPopMatrix());
+
 
     glsafe(::glEnable(GL_CULL_FACE));
     glsafe(::glDisable(GL_BLEND));
@@ -90,15 +89,14 @@ void GLGizmoFlatten::on_render()
 
 void GLGizmoFlatten::on_render_for_picking()
 {
-    const Selection& selection = m_parent.get_selection();
-
     glsafe(::glDisable(GL_DEPTH_TEST));
     glsafe(::glDisable(GL_BLEND));
+    const ModelObject* mo = m_c->selection_info()->model_object();
 
-    if (selection.is_single_full_instance() && !wxGetKeyState(WXK_CONTROL)) {
-        const Transform3d& m = selection.get_volume(*selection.get_volume_idxs().begin())->get_instance_transformation().get_matrix();
+    if (!wxGetKeyState(WXK_CONTROL)) {
+        const Transform3d& m = mo->instances[m_c->selection_info()->get_active_instance()]->get_transformation().get_matrix();
         glsafe(::glPushMatrix());
-        glsafe(::glTranslatef(0.f, 0.f, selection.get_volume(*selection.get_volume_idxs().begin())->get_sla_shift_z()));
+        glsafe(::glTranslatef(0.f, 0.f, m_c->selection_info()->get_sla_shift()));
         glsafe(::glMultMatrixd(m.data()));
         if (this->is_plane_update_necessary())
             update_planes();

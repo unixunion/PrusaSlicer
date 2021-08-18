@@ -73,7 +73,7 @@ void GLGizmoPainterBase::set_painter_gizmo_data(const Selection& selection)
 
     const ModelObject* mo = m_c->selection_info() ? m_c->selection_info()->model_object() : nullptr;
 
-    if (mo && selection.is_from_single_instance()
+    if (mo && selection.is_from_single_object()
      && (m_schedule_update || mo->id() != m_old_mo_id || mo->volumes.size() != m_old_volumes_size))
     {
         update_from_model_object();
@@ -85,7 +85,7 @@ void GLGizmoPainterBase::set_painter_gizmo_data(const Selection& selection)
 
 
 
-void GLGizmoPainterBase::render_triangles(const Selection& selection, const bool use_polygon_offset_fill) const
+void GLGizmoPainterBase::render_triangles(const bool use_polygon_offset_fill) const
 {
     const ModelObject* mo = m_c->selection_info()->model_object();
 
@@ -126,7 +126,7 @@ void GLGizmoPainterBase::render_triangles(const Selection& selection, const bool
         ++mesh_id;
 
         const Transform3d trafo_matrix =
-            mo->instances[selection.get_instance_idx()]->get_transformation().get_matrix() *
+            mo->instances[m_c->selection_info()->get_active_instance()]->get_transformation().get_matrix() *
             mv->get_matrix();
 
         bool is_left_handed = trafo_matrix.matrix().determinant() < 0.;
@@ -155,8 +155,7 @@ void GLGizmoPainterBase::render_cursor() const
 {
     // First check that the mouse pointer is on an object.
     const ModelObject* mo = m_c->selection_info()->model_object();
-    const Selection& selection = m_parent.get_selection();
-    const ModelInstance* mi = mo->instances[selection.get_instance_idx()];
+    const ModelInstance* mi = mo->instances[m_c->selection_info()->get_active_instance()];
     const Camera& camera = wxGetApp().plater()->get_camera();
 
     // Precalculate transformations of individual meshes.
@@ -325,9 +324,8 @@ bool GLGizmoPainterBase::gizmo_event(SLAGizmoEventType action, const Vec2d& mous
         }
 
         const Camera        &camera         = wxGetApp().plater()->get_camera();
-        const Selection     &selection      = m_parent.get_selection();
         const ModelObject   *mo             = m_c->selection_info()->model_object();
-        const ModelInstance *mi             = mo->instances[selection.get_instance_idx()];
+        const ModelInstance *mi             = mo->instances[m_c->selection_info()->get_active_instance()];
         const Transform3d   &instance_trafo = mi->get_transformation().get_matrix();
 
         // List of mouse positions that will be used as seeds for painting.
@@ -411,9 +409,8 @@ bool GLGizmoPainterBase::gizmo_event(SLAGizmoEventType action, const Vec2d& mous
             return false;
 
         const Camera &       camera         = wxGetApp().plater()->get_camera();
-        const Selection &    selection      = m_parent.get_selection();
         const ModelObject *  mo             = m_c->selection_info()->model_object();
-        const ModelInstance *mi             = mo->instances[selection.get_instance_idx()];
+        const ModelInstance *mi             = mo->instances[m_c->selection_info()->get_active_instance()];
         const Transform3d &  instance_trafo = mi->get_transformation().get_matrix();
 
         // Precalculate transformations of individual meshes.
@@ -527,7 +524,7 @@ bool GLGizmoPainterBase::on_is_activable() const
     const Selection& selection = m_parent.get_selection();
 
     if (wxGetApp().preset_bundle->printers.get_edited_preset().printer_technology() != ptFFF
-        || !selection.is_single_full_instance() || wxGetApp().get_mode() == comSimple)
+        || !selection.is_from_single_object() || wxGetApp().get_mode() == comSimple)
         return false;
 
     // Check that none of the selected volumes is outside. Only SLA auxiliaries (supports) are allowed outside.

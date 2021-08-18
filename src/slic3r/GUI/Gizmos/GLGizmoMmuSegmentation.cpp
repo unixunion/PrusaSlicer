@@ -139,12 +139,10 @@ bool GLGizmoMmuSegmentation::on_init()
 
 void GLGizmoMmuSegmentation::render_painter_gizmo() const
 {
-    const Selection& selection = m_parent.get_selection();
-
     glsafe(::glEnable(GL_BLEND));
     glsafe(::glEnable(GL_DEPTH_TEST));
 
-    render_triangles(selection, false);
+    render_triangles(false);
 
     m_c->object_clipper()->render_cut();
     m_c->instances_hider()->render_cut();

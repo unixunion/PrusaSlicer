@@ -55,12 +55,10 @@ std::string GLGizmoSeam::on_get_name() const
 
 void GLGizmoSeam::render_painter_gizmo() const
 {
-    const Selection& selection = m_parent.get_selection();
-
     glsafe(::glEnable(GL_BLEND));
     glsafe(::glEnable(GL_DEPTH_TEST));
 
-    render_triangles(selection);
+    render_triangles();
 
     m_c->object_clipper()->render_cut();
     m_c->instances_hider()->render_cut();
