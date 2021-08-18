@@ -11,6 +11,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/dll/runtime_symbol_info.hpp>
 
 #include <wx/filename.h>
 #include <wx/stattext.h>
