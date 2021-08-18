@@ -93,15 +93,12 @@ bool copy_icon(const std::string& icon_path, const std::string& dest_path)
 }
 // Creates new file filled with data.
 bool create_desktop_file(const std::string& path, const std::string& data)
-{
-    std::string escaped_path = path;//escape_string_cstyle(path);
-    //escaped_path = "'" + escaped_path + "'";
-    
-    BOOST_LOG_TRIVIAL(debug) <<".desktop to "<< escaped_path;
-    std::ofstream output(escaped_path);
+{    
+    BOOST_LOG_TRIVIAL(debug) <<".desktop to "<< path;
+    std::ofstream output(path);
     output << data;
     struct stat buffer;
-    if (stat(escaped_path.c_str(), &buffer) == 0)
+    if (stat(path.c_str(), &buffer) == 0)
     {
         BOOST_LOG_TRIVIAL(debug) << "Desktop file created.";
         return true;
@@ -175,6 +172,9 @@ void DesktopIntegrationDialog::perform_desktop_integration()
         return;
         */
     }
+
+    // Escape ' characters in appimage, other special symbols will be esacaped in desktop file by 'appimage_path'
+    //appimage_path = std::regex_replace(appimage_path, std::regex("\'"), "\\\'");
 
     // Find directories icons and applications
     // $XDG_DATA_HOME defines the base directory relative to which user specific data files should be stored. 
@@ -260,7 +260,7 @@ void DesktopIntegrationDialog::perform_desktop_integration()
                 "Name=PrusaSlicer%1%\n"
                 "GenericName=3D Printing Software\n"
                 "Icon=PrusaSlicer%2%\n"
-                "Exec=%3% %%F\n"
+                "Exec=\'%3%\' %%F\n"
                 "Terminal=false\n"
                 "Type=Application\n"
                 "MimeType=model/stl;application/vnd.ms-3mfdocument;application/prs.wavefront-obj;application/x-amf;\n"
@@ -327,7 +327,7 @@ void DesktopIntegrationDialog::perform_desktop_integration()
         "Name=Prusa Gcode Viewer%1%\n"
         "GenericName=3D Printing Software\n"
         "Icon=PrusaSlicer-gcodeviewer%2%\n"
-        "Exec=%3% --gcodeviwer %%F\n"
+        "Exec=\'%3%\' --gcodeviwer %%F\n"
         "Terminal=false\n"
         "Type=Application\n"
         "MimeType=text/x.gcode;\n"
